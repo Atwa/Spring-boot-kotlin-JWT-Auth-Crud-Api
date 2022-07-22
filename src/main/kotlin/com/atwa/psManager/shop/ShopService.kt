@@ -2,6 +2,8 @@ package com.atwa.psManager.shop
 
 import com.atwa.psManager.auth.UserRepository
 import com.atwa.psManager.shop.payload.AddShopRequest
+import com.atwa.psManager.shop.payload.EditShopRequest
+import com.atwa.psManager.util.error.BadRequestException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -20,38 +22,37 @@ class ShopService {
     fun getShops(): List<Shop> =
         shopRepository.findAll()
 
-    fun addShop(addShopRequest: AddShopRequest): ResponseEntity<Shop> =
-        userRepository.findById(addShopRequest.userId).map { user ->
-            val shop = Shop(
-                name = addShopRequest.name,
-                city = addShopRequest.city,
-                area = addShopRequest.area
-            )
-            user.shop = shop
-            ResponseEntity.ok().body(shopRepository.save(shop))
-        }.orElseThrow { RuntimeException("Error: Session not found.") }
+    fun addShop(addShopRequest: AddShopRequest): ResponseEntity<Any> {
+        val user = userRepository.findById(addShopRequest.userId)
+            .orElseThrow { BadRequestException("Error: User not found.") }
+        val shop = Shop(
+            name = addShopRequest.name,
+            city = addShopRequest.city,
+            area = addShopRequest.area
+        )
+        user.shop = shop
+        return ResponseEntity.ok().body(shopRepository.save(shop))
+    }
 
-    fun getShopById(shopId: Long): ResponseEntity<Shop> =
-        shopRepository.findById(shopId).map { shop ->
-            ResponseEntity.ok(shop)
-        }.orElseThrow { RuntimeException("Error: Shop not found.") }
+    fun getShopById(shopId: Long): ResponseEntity<Any> {
+        val shop = shopRepository.findById(shopId).orElseThrow { BadRequestException("Error: Shop not found.") }
+        return ResponseEntity.ok(shop)
+    }
 
-    fun updateShopById(shopId: Long, newShop: Shop): ResponseEntity<Shop> =
-        shopRepository.findById(shopId).map { currentShop ->
-            val updatedShop = currentShop.copy(
-                name = newShop.name,
-                city = newShop.city,
-                area = newShop.area,
-                createdAt = newShop.createdAt,
-                updatedAt = LocalDateTime.now(),
-                users = newShop.users
-            )
-            ResponseEntity.ok().body(shopRepository.save(updatedShop))
-        }.orElseThrow { RuntimeException("Error: Shop not found.") }
+    fun updateShopById(shopId: Long, newShop: EditShopRequest): ResponseEntity<Any> {
+        val shop = shopRepository.findById(shopId).orElseThrow { BadRequestException("Error: Shop not found.") }
+        val updatedShop = shop.copy(
+            name = newShop.name,
+            city = newShop.city,
+            area = newShop.area,
+            updatedAt = LocalDateTime.now()
+        )
+        return ResponseEntity.ok().body(shopRepository.save(updatedShop))
+    }
 
-    fun deleteShop(shopId: Long): ResponseEntity<Void> =
-        shopRepository.findById(shopId).map { shop ->
-            shopRepository.delete(shop)
-            ResponseEntity<Void>(HttpStatus.ACCEPTED)
-        }.orElseThrow { RuntimeException("Error: Shop not found.") }
+    fun deleteShop(shopId: Long): ResponseEntity<Any> {
+        val shop = shopRepository.findById(shopId).orElseThrow { BadRequestException("Error: Shop not found.") }
+        shopRepository.delete(shop)
+        return ResponseEntity<Any>(HttpStatus.ACCEPTED)
+    }
 }

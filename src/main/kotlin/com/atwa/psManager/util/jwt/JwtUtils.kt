@@ -2,10 +2,13 @@ package com.atwa.psManager.util.jwt
 
 import com.atwa.psManager.auth.UserDetailImpl
 import io.jsonwebtoken.*
+import io.jsonwebtoken.io.Decoders
+import io.jsonwebtoken.security.Keys
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Component
+import java.security.Key
 import java.util.*
 
 
@@ -20,24 +23,25 @@ class JwtUtils {
 
     fun generateJwtToken(authentication: Authentication): String {
         val userPrincipal: UserDetailImpl = authentication.principal as UserDetailImpl
+        val keyBytes = Decoders.BASE64.decode(jwtSecret)
+        val key: Key = Keys.hmacShaKeyFor(keyBytes)
         val token = Jwts.builder()
             .setSubject(userPrincipal.username)
             .setIssuedAt(Date())
             .setExpiration(Date(Date().time + jwtExpirationMs!!))
-            .signWith(SignatureAlgorithm.HS256, jwtSecret)
-            .compact()
+            .signWith(key).compact()
         return "Bearer $token"
     }
 
     fun getUserNameFromJwtToken(token: String?): String {
-        return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).body.subject
+        return Jwts.parserBuilder().setSigningKey(jwtSecret).build().parseClaimsJws(token).body.subject
     }
 
     fun validateJwtToken(authToken: String?): Boolean {
         try {
-            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken)
+            Jwts.parserBuilder().setSigningKey(jwtSecret).build().parseClaimsJws(authToken)
             return true
-        } catch (e: SignatureException) {
+        } catch (e: SecurityException) {
             logger.error("Invalid JWT signature: {}", e.message)
         } catch (e: MalformedJwtException) {
             logger.error("Invalid JWT token: {}", e.message)

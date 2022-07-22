@@ -1,1 +1,1 @@
-rootProject.name = "psmanager"
+rootProject.name = "psManager"

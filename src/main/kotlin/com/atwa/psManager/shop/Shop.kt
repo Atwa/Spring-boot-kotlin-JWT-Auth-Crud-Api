@@ -14,9 +14,9 @@ data class Shop(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
     @Column(unique = true)
-    val name: BigDecimal,
-    val city: String,
+    val name: String,
     val area: String,
+    val city: String,
     val createdAt: LocalDateTime? = LocalDateTime.now(),
     val updatedAt: LocalDateTime? = LocalDateTime.now(),
 

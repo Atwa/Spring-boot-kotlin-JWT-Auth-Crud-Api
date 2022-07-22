@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: &dbURL jdbc:mysql://localhost:3306/psmanager_db
+    url: &dbURL jdbc:mysql://localhost:3306/psmanager
     username: &dbUser root
     password: &dbPassword theBest0ption4u!!
   jpa:
