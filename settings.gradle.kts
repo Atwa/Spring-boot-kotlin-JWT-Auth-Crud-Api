@@ -1,1 +1,1 @@
-rootProject.name = "psManager"
+rootProject.name = "Remote PS"
